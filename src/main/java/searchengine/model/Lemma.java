@@ -3,7 +3,6 @@ package searchengine.model;
 import lombok.*;
 
 import javax.persistence.*;
-import javax.persistence.Index;
 
 @Getter
 @Setter
@@ -12,8 +11,8 @@ import javax.persistence.Index;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "page", indexes = {@Index(columnList = "path", name = "path_index")})
-public class Page {
+@Table(name = "lemma")
+public class Lemma {
 
     @Id
     @Column(nullable = false)
@@ -25,12 +24,11 @@ public class Page {
     @JoinColumn(name = "site_id", nullable = false)
     private Site site;
 
-    @Column(name = "path", nullable = false, unique = true)
-    private String path;
+    @Column(name = "lemma", nullable = false)
+    private String lemma;
 
-    @Column(name = "code", nullable = false)
-    private Integer code;
+    @Column(name = "frequency", nullable = false)
+    private int frequency;
 
-    @Column(name = "content", columnDefinition = "MEDIUMTEXT", nullable = false)
-    private String content;
+
 }

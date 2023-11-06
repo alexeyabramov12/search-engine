@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import searchengine.config.ConnectionToSite;
+import searchengine.config.SiteConfig;
 import searchengine.config.SitesList;
 import searchengine.model.Site;
 import searchengine.model.Status;
@@ -18,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @Slf4j
@@ -31,22 +31,21 @@ public class IndexingServiceImpl implements IndexingService {
     private final SitesList sitesList;
     private final ConnectionToSite connectionToSite;
     private final List<ForkJoinPool> forkJoinPools = new ArrayList<>();
+    private final List<Thread> threads = new ArrayList<>();
 
 
     @Override
     public boolean startIndexing() {
-        AtomicBoolean isIndexing = getIndexingStatus(new AtomicBoolean(false));
 
-        if (isIndexing.get()) {
+        if (!forkJoinPools.isEmpty()) {
             return false;
         }
 
         CountDownLatch deletionLatch = new CountDownLatch(1);
 
         new Thread(() -> {
-            deletePagesInBatches(200);
-            deleteSiteData();
-            deletionLatch.countDown();
+            deleteData(200);
+             deletionLatch.countDown();
         }).start();
 
         try {
@@ -56,10 +55,9 @@ public class IndexingServiceImpl implements IndexingService {
             return false;
         }
 
-        Parser.startParsing();
 
-        List<searchengine.config.Site> siteList = sitesList.getSites();
-        siteList.forEach(s -> {
+        List<SiteConfig> siteConfigList = sitesList.getSites();
+        siteConfigList.forEach(s -> {
             Site site = Site.builder()
                     .name(s.getName())
                     .url(s.getUrl())
@@ -67,27 +65,25 @@ public class IndexingServiceImpl implements IndexingService {
                     .statusTime(LocalDateTime.now())
                     .build();
             siteRepository.save(site);
-            new Thread(() -> startPoll(site)).start();
+            Thread thread = new Thread(() -> startPoll(site));
+            threads.add(thread);
+            thread.start();
             log.info("In IndexingServiceImpl startIndexing: site - {}", site);
         });
-        siteList.clear();
 
         return true;
     }
 
     @Override
     public boolean stopIndexing() {
-        AtomicBoolean isIndexing = getIndexingStatus(new AtomicBoolean(false));
 
-        if (!isIndexing.get()) {
+        if (forkJoinPools.isEmpty()) {
             return false;
         }
 
-        Parser.stopParsing();
 
-        forkJoinPools.forEach(f -> log.info("FJP info - " + f.toString()));
         forkJoinPools.forEach(ForkJoinPool::shutdownNow);
-        forkJoinPools.forEach(f -> log.info("FJP info - " + f.toString()));
+        threads.forEach(Thread::interrupt);
 
         siteRepository.findAll().forEach(site -> {
             if (site.getStatus().equals(Status.INDEXING)) {
@@ -99,25 +95,14 @@ public class IndexingServiceImpl implements IndexingService {
         });
 
         forkJoinPools.clear();
+        threads.clear();
 
         return true;
     }
 
-    private AtomicBoolean getIndexingStatus(AtomicBoolean isIndexing) {
-        siteRepository.findAll().forEach(site -> {
-            if (site.getStatus().equals(Status.INDEXING)) {
-                isIndexing.set(true);
-            }
-        });
-
-        return isIndexing;
-    }
-
     private void startPoll(Site site) {
-        String url = site.getUrl();
-        Parser parser = new Parser(site, url, connectionToSite, siteRepository, pageRepository);
-
-        ForkJoinPool forkJoinPool = new ForkJoinPool(2);
+        Parser parser = new Parser(site, site.getUrl(), siteRepository, pageRepository, connectionToSite);
+        ForkJoinPool forkJoinPool = new ForkJoinPool();
         forkJoinPools.add(forkJoinPool);
         forkJoinPool.invoke(parser);
 
@@ -128,7 +113,7 @@ public class IndexingServiceImpl implements IndexingService {
     }
 
 
-    private void deletePagesInBatches(int batchSize) {
+    private void deleteData(int batchSize) {
         Pageable pageable = PageRequest.ofSize(batchSize);
 
         Page<searchengine.model.Page> pagesToDelete = pageRepository.findAll(pageable);
@@ -136,15 +121,10 @@ public class IndexingServiceImpl implements IndexingService {
             pageRepository.deleteAll(pagesToDelete.getContent());
             pageable = PageRequest.ofSize(batchSize);
             pagesToDelete = pageRepository.findAll(pageable);
-            log.info("In IndexingServiceImpl deletePagesInBatches: ");
+            log.info("In IndexingServiceImpl deleteData: deletePagesInBatches");
         }
-    }
-
-
-    private void deleteSiteData() {
         siteRepository.deleteAll();
-        log.info("In IndexingServiceImpl deleteSiteData: ");
+        log.info("In IndexingServiceImpl deleteData: deleteSiteData");
     }
-
 
 }

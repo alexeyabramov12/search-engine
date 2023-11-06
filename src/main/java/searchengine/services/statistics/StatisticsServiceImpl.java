@@ -2,7 +2,7 @@ package searchengine.services.statistics;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import searchengine.config.Site;
+import searchengine.config.SiteConfig;
 import searchengine.config.SitesList;
 import searchengine.dto.statistics.DetailedStatisticsItem;
 import searchengine.dto.statistics.StatisticsData;
@@ -38,12 +38,12 @@ public class StatisticsServiceImpl implements StatisticsService {
         total.setIndexing(true);
 
         List<DetailedStatisticsItem> detailed = new ArrayList<>();
-        List<Site> sitesList = sites.getSites();
+        List<SiteConfig> sitesList = sites.getSites();
         for(int i = 0; i < sitesList.size(); i++) {
-            Site site = sitesList.get(i);
+            SiteConfig siteConfig = sitesList.get(i);
             DetailedStatisticsItem item = new DetailedStatisticsItem();
-            item.setName(site.getName());
-            item.setUrl(site.getUrl());
+            item.setName(siteConfig.getName());
+            item.setUrl(siteConfig.getUrl());
             int pages = (int) pageRepository.count();
             int lemmas = pages * random.nextInt(1_000);
             item.setPages(pages);
@@ -52,7 +52,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             item.setError(errors[i % 3]);
             item.setStatusTime(System.currentTimeMillis() -
                     (random.nextInt(10_000)));
-            total.setPages(total.getPages() + pages);
+            total.setPages(pages);
             total.setLemmas(total.getLemmas() + lemmas);
             detailed.add(item);
         }

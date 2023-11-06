@@ -1,5 +1,7 @@
 package searchengine.services.indexing;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -13,35 +15,25 @@ import searchengine.model.Status;
 import searchengine.repository.PageRepository;
 import searchengine.repository.SiteRepository;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.RecursiveAction;
 
 @Slf4j
+@NoArgsConstructor
+@AllArgsConstructor
 public class Parser extends RecursiveAction {
 
-    private final Site site;
-    private final String link;
-    private final SiteRepository siteRepository;
-    private final PageRepository pageRepository;
-    private final ConnectionToSite connectionToSite;
-    private static volatile boolean stop;
+    private Site site;
+    private String link;
+    private SiteRepository siteRepository;
+    private PageRepository pageRepository;
+    private ConnectionToSite connectionToSite;
 
-
-    public Parser(Site site, String link, ConnectionToSite connectionToSite, SiteRepository siteRepository, PageRepository pageRepository) {
-        this.site = site;
-        this.link = link;
-        this.connectionToSite = connectionToSite;
-        this.siteRepository = siteRepository;
-        this.pageRepository = pageRepository;
-    }
-
+    private static String VALID_URL = ".*\\.(js|css|jpg|pdf|jpeg|gif|zip|tar|jar|gz|svg|ppt|pptx|php|png)($|\\?.*)";
     @Override
     protected void compute() {
         try {
-            Thread.sleep(1000);
-
             Connection.Response response = Jsoup.connect(link)
                     .userAgent(connectionToSite.getUser_agent())
                     .referrer(connectionToSite.getReferer())
@@ -52,37 +44,34 @@ public class Parser extends RecursiveAction {
             Document doc = response.parse();
             if (statusCode < 400) {
                 String path = getPath(link);
-                if (!pageRepository.existsByPath(path) && !stop) {
+                if (!pageRepository.existsByPath(path) || path.equals("/")) {
                     addToDatabase(doc, statusCode, path);
                     parse(doc);
                 }
             }
 
-        } catch (IOException | NullPointerException exception) {
-            exception.printStackTrace();
+        } catch (Exception exception ) {
+            log.error(exception.toString());
             site.setLastError("Ошибка индексации");
             site.setStatus(Status.FAILED);
             siteRepository.save(site);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 
     private void parse(Document doc) {
         Elements elements = doc.select("a[href]");
         List<Parser> subTasks = new ArrayList<>();
-        String validUrl = ".*\\.(js|css|jpg|pdf|jpeg|gif|zip|tar|jar|gz|svg|ppt|pptx|php|png)($|\\?.*)";
 
         for (Element element : elements) {
             String url = element.attr("abs:href");
 
-            if (stop || url.isEmpty() || !url.contains(site.getUrl()) || url.matches(validUrl) || url.contains("#") || url.contains("vk.com")) {
+            if (url.isEmpty() || !url.contains(site.getUrl()) || url.matches(VALID_URL) || url.contains("#") || url.contains("vk.com")) {
                 continue;
             }
 
             String path = getPath(url);
             if (!pageRepository.existsByPath(path)) {
-                Parser task = new Parser(site, url, connectionToSite, siteRepository, pageRepository);
+                Parser task = new Parser(site, url, siteRepository, pageRepository, connectionToSite);
                 task.fork();
                 subTasks.add(task);
             }
@@ -95,16 +84,19 @@ public class Parser extends RecursiveAction {
 
 
     private void addToDatabase(Document doc, int statusCode, String path) {
-        if (!stop) {
-            site.setStatusTime(LocalDateTime.now());
-            site.setStatus(Status.INDEXING);
-        }
+        site.setStatusTime(LocalDateTime.now());
+        site.setStatus(Status.INDEXING);
+
         Page page = Page.builder()
-                .siteId(site)
+                .site(site)
                 .path(path)
                 .code(statusCode)
                 .content(doc.html())
                 .build();
+        if (pageRepository.existsByPath(path)){
+            return;
+        }
+
         pageRepository.save(page);
         log.info("IN Parser addToDatabase: path - {}", path);
         siteRepository.save(site);
@@ -114,14 +106,6 @@ public class Parser extends RecursiveAction {
     private String getPath(String url) {
         String path = url.substring(url.indexOf(site.getUrl()) + site.getUrl().length());
         return path.isEmpty() ? "/" : path;
-    }
-
-    public static void stopParsing() {
-        stop = true;
-    }
-
-    public static void startParsing() {
-        stop = false;
     }
 }
 
