@@ -2,58 +2,56 @@ package searchengine.services.statistics;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import searchengine.config.SiteConfig;
-import searchengine.config.SitesList;
 import searchengine.dto.statistics.DetailedStatisticsItem;
 import searchengine.dto.statistics.StatisticsData;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.dto.statistics.TotalStatistics;
+import searchengine.model.site.Site;
+import searchengine.model.site.Status;
+import searchengine.repository.LemmaRepository;
 import searchengine.repository.PageRepository;
-import searchengine.repository.SiteRepository;
+import searchengine.services.lemma.LemmaService;
+import searchengine.services.page.PageService;
+import searchengine.services.site.SiteService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
 
-    private final Random random = new Random();
-    private final SitesList sites;
-    private final PageRepository pageRepository;
-    private final SiteRepository siteRepository;
+    private final PageService pageService;
+    private final SiteService siteService;
+    private final LemmaService lemmaService;
 
     @Override
     public StatisticsResponse getStatistics() {
-        String[] statuses = { "INDEXED", "FAILED", "INDEXING" };
-        String[] errors = {
-                "Ошибка индексации: главная страница сайта не доступна",
-                "Ошибка индексации: сайт не доступен",
-                ""
-        };
 
-        TotalStatistics total = new TotalStatistics();
-        total.setSites(sites.getSites().size());
-        total.setIndexing(true);
+        TotalStatistics total = TotalStatistics.builder()
+                .sites(siteService.getCount())
+                .pages(pageService.getCount())
+                .lemmas(lemmaService.getCount())
+                .indexing(false)
+                .build();
 
         List<DetailedStatisticsItem> detailed = new ArrayList<>();
-        List<SiteConfig> sitesList = sites.getSites();
-        for(int i = 0; i < sitesList.size(); i++) {
-            SiteConfig siteConfig = sitesList.get(i);
-            DetailedStatisticsItem item = new DetailedStatisticsItem();
-            item.setName(siteConfig.getName());
-            item.setUrl(siteConfig.getUrl());
-            int pages = (int) pageRepository.count();
-            int lemmas = pages * random.nextInt(1_000);
-            item.setPages(pages);
-            item.setLemmas(lemmas);
-            item.setStatus(statuses[i % 3]);
-            item.setError(errors[i % 3]);
-            item.setStatusTime(System.currentTimeMillis() -
-                    (random.nextInt(10_000)));
-            total.setPages(pages);
-            total.setLemmas(total.getLemmas() + lemmas);
+        List<Site> sitesList = siteService.getAll();
+        for (Site site : sitesList) {
+
+            if (site.getStatus().equals(Status.INDEXING)) {
+                total.setIndexing(true);
+            }
+
+            DetailedStatisticsItem item = DetailedStatisticsItem.builder()
+                    .url(site.getUrl())
+                    .name(site.getName())
+                    .status(site.getStatus().toString())
+                    .statusTime(System.currentTimeMillis())
+                    .error(site.getLastError() == null ? "" : site.getLastError())
+                    .pages(pageService.getCountBySite(site))
+                    .lemmas(lemmaService.getCountBySite(site))
+                    .build();
             detailed.add(item);
         }
 

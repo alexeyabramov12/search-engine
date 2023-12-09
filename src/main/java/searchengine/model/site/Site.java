@@ -1,5 +1,7 @@
-package searchengine.model;
+package searchengine.model.site;
+
 import lombok.*;
+import searchengine.model.site.Status;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;

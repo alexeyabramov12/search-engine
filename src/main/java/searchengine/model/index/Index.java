@@ -1,6 +1,8 @@
-package searchengine.model;
+package searchengine.model.index;
 
 import lombok.*;
+import searchengine.model.lemma.Lemma;
+import searchengine.model.page.Page;
 
 import javax.persistence.*;
 
@@ -17,18 +19,18 @@ public class Index {
     @Id
     @Column(nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @ToString.Exclude
-    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "page_id", foreignKey = @ForeignKey(name = "custom_fk_name"), nullable = false)
     private Page page;
 
     @ToString.Exclude
-    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "lemma_id", nullable = false)
     private Lemma lemma;
 
     @Column(name = "`rank`", nullable = false)
-    private Float rank;
+    private Integer rank;
 }

@@ -1,6 +1,7 @@
-package searchengine.model;
+package searchengine.model.page;
 
 import lombok.*;
+import searchengine.model.site.Site;
 
 import javax.persistence.*;
 import javax.persistence.Index;
@@ -18,14 +19,14 @@ public class Page {
     @Id
     @Column(nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @ToString.Exclude
     @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = false)
     private Site site;
 
-    @Column(name = "path", nullable = false, unique = true)
+    @Column(name = "path", nullable = false)
     private String path;
 
     @Column(name = "code", nullable = false)
