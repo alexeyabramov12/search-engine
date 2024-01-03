@@ -1,4 +1,4 @@
-package searchengine.services.page;
+package searchengine.service.page;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

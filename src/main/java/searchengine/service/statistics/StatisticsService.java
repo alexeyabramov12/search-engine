@@ -1,4 +1,4 @@
-package searchengine.services.statistics;
+package searchengine.service.statistics;
 
 import org.springframework.stereotype.Service;
 import searchengine.dto.statistics.StatisticsResponse;

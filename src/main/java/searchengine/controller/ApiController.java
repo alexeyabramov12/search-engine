@@ -1,4 +1,4 @@
-package searchengine.controllers;
+package searchengine.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import searchengine.dto.indexing.IndexingResponse;
+import searchengine.dto.search.SearchResponse;
 import searchengine.dto.statistics.StatisticsResponse;
-import searchengine.services.indexing.IndexingService;
-import searchengine.services.statistics.StatisticsService;
+import searchengine.service.indexing.IndexingService;
+import searchengine.service.search.SearchService;
+import searchengine.service.statistics.StatisticsService;
 
 @Slf4j
 @RestController
@@ -19,7 +21,8 @@ import searchengine.services.statistics.StatisticsService;
 public class ApiController {
 
     private final StatisticsService statisticsService;
-    public final IndexingService indexingService;
+    private final IndexingService indexingService;
+    private final SearchService searchService;
 
 
     @GetMapping("/startIndexing")
@@ -41,9 +44,15 @@ public class ApiController {
     }
 
     @PostMapping("/indexPage")
-    private ResponseEntity<IndexingResponse> addOrUpdatePage(String url) {
+    public ResponseEntity<IndexingResponse> addOrUpdatePage(String url) {
         log.info("In ApiController addOrUpdatePage: data with url - {} added or updated", url);
         return ResponseEntity.ok(indexingService.addOrUpdatePage(url.trim()));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<SearchResponse> search(String query, Integer offset, Integer limit) {
+        log.info("In ApiController search: query - {} added or updated", query);
+        return ResponseEntity.ok(searchService.search(query.trim(), offset, limit));
     }
 
 }

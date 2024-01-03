@@ -1,4 +1,4 @@
-package searchengine.services.lemma;
+package searchengine.service.lemma;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,8 +9,8 @@ import searchengine.model.lemma.Lemma;
 import searchengine.model.page.Page;
 import searchengine.model.site.Site;
 import searchengine.repository.LemmaRepository;
-import searchengine.services.indexing.CreateSiteMap;
-import searchengine.services.indexing.index.IndexService;
+import searchengine.service.indexing.CreateSiteMap;
+import searchengine.service.index.IndexService;
 
 import java.util.Map;
 

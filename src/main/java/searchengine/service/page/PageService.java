@@ -1,4 +1,4 @@
-package searchengine.services.page;
+package searchengine.service.page;
 
 import org.springframework.stereotype.Service;
 import searchengine.model.page.Page;

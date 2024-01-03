@@ -1,8 +1,9 @@
-package searchengine.services.indexing.index;
+package searchengine.service.index;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import searchengine.model.index.Index;
+import searchengine.model.lemma.Lemma;
 import searchengine.model.page.Page;
 import searchengine.repository.IndexRepository;
 
@@ -37,5 +38,9 @@ public class IndexServiceImpl implements IndexService {
     @Override
     public List<Index> findAllByPage(Page page) {
         return indexRepository.findAllByPage(page);
+    }
+
+    public List<Index> findAllByLemma(Lemma lemma) {
+        return indexRepository.findAllByLemma(lemma);
     }
 }

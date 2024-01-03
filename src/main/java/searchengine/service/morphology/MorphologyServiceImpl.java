@@ -1,4 +1,4 @@
-package searchengine.services.morphology;
+package searchengine.service.morphology;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import searchengine.model.lemma.Lemma;
 import searchengine.model.site.Site;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +27,7 @@ public class MorphologyServiceImpl implements MorphologyService {
     private static final String ENGLISH_ALPHABET = "[a-zA-z]+";
 
     @Override
-    public Map<Lemma, Integer> getLemmas(Document doc, Site site) throws IOException {
+    public Map<Lemma, Integer> getLemmas(Document doc, Site site) {
         String[] words = doc.text().split("\\s+");
         Map<Lemma, Integer> lemmasMap = new HashMap<>();
         for (String word : words) {
@@ -46,6 +45,26 @@ public class MorphologyServiceImpl implements MorphologyService {
         }
 
         return lemmasMap;
+    }
+
+    @Override
+    public String getNormalForm(String word) {
+        String result = "";
+        String wordLowerCase = word.toLowerCase();
+
+        if (getLanguage(wordLowerCase).isEmpty() || word.length() == 1) {
+            return result;
+        }
+        if (getLanguage(wordLowerCase).equals("RUSSIAN")) {
+            result = !checkWord(wordLowerCase, russianLuceneMorphology) ? ""
+                    : russianLuceneMorphology.getNormalForms(wordLowerCase).toString();
+        }
+        if (getLanguage(wordLowerCase).equals("ENGLISH")) {
+            result = !checkWord(wordLowerCase, englishLuceneMorphology) ? ""
+                    : englishLuceneMorphology.getNormalForms(wordLowerCase).toString();
+        }
+
+        return result;
     }
 
     public String getLanguage(String word) {
@@ -76,7 +95,6 @@ public class MorphologyServiceImpl implements MorphologyService {
         } else {
             lemmasMap.put(lemma, 1);
         }
-
     }
 
     private boolean checkWord(String word, LuceneMorphology luceneMorphology) {

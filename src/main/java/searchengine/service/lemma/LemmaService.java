@@ -1,4 +1,4 @@
-package searchengine.services.lemma;
+package searchengine.service.lemma;
 
 import org.springframework.stereotype.Service;
 import searchengine.model.lemma.Lemma;
