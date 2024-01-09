@@ -13,6 +13,7 @@ import searchengine.model.site.Site;
 import searchengine.service.index.IndexService;
 import searchengine.service.lemma.LemmaService;
 import searchengine.service.morphology.MorphologyService;
+import searchengine.service.snippet.SnippetService;
 
 import java.util.*;
 
@@ -24,7 +25,7 @@ public class SearchServiceImpl implements SearchService {
     private final MorphologyService morphologyService;
     private final LemmaService lemmaService;
     private final IndexService indexService;
-
+    private final SnippetService snippetService;
 
     @Override
     public SearchResponse search(String query, Integer offset, Integer limit) {
@@ -38,6 +39,27 @@ public class SearchServiceImpl implements SearchService {
 
         log.info("In searchServiceImpl search: query - {}", query);
         return getSearchResponse(query);
+    }
+
+    private SearchResponse getSearchResponse(String query) {
+        SearchResponse searchResponse = new SearchResponse();
+
+        List<Lemma> lemmas = getLemmas(query);
+        List<Page> pages = getPages(lemmas);
+        List<Index> indexes = getIndexes(lemmas, pages);
+
+        if (pages.isEmpty()) {
+            searchResponse.setResult(false);
+            searchResponse.setError("Указанная страница не найдена");
+            log.info("In searchServiceImpl search: not found any pages for query - {}", query);
+            return searchResponse;
+        }
+
+        searchResponse.setResult(true);
+        searchResponse.setCount(pages.size());
+        searchResponse.setData(getSearchData(lemmas, pages, indexes));
+
+        return searchResponse;
     }
 
     private List<Lemma> getLemmas(String query) {
@@ -63,7 +85,6 @@ public class SearchServiceImpl implements SearchService {
                 .sorted(Comparator.comparing(Lemma::getFrequency))
                 .toList();
     }
-
 
     private List<Page> getPages(List<Lemma> lemmas) {
         if (lemmas.isEmpty()) {
@@ -121,27 +142,6 @@ public class SearchServiceImpl implements SearchService {
         return sumFrequency / lemmas.size();
     }
 
-    private SearchResponse getSearchResponse(String query) {
-        SearchResponse searchResponse = new SearchResponse();
-
-        List<Lemma> lemmas = getLemmas(query);
-        List<Page> pages = getPages(lemmas);
-        List<Index> indexes = getIndexes(lemmas, pages);
-
-        if (pages.isEmpty()) {
-            searchResponse.setResult(false);
-            searchResponse.setError("Указанная страница не найдена");
-            log.info("In searchServiceImpl search: not found any pages for query - {}", query);
-            return searchResponse;
-        }
-
-        searchResponse.setResult(true);
-        searchResponse.setCount(pages.size());
-        searchResponse.setData(getSearchData(lemmas, pages, indexes));
-
-        return searchResponse;
-    }
-
     private List<SearchData> getSearchData(List<Lemma> lemmas, List<Page> pages, List<Index> indexes) {
         List<SearchData> searchDataList = new ArrayList<>();
 
@@ -150,12 +150,12 @@ public class SearchServiceImpl implements SearchService {
 
             SearchData searchData = SearchData
                     .builder()
-                    .url(page.getPath())
+                    .uri(page.getPath().equals("/") ? "" : page.getPath())
                     .site(site.getUrl())
                     .siteName(site.getName())
                     .title(getTitle(page.getContent()))
-                    .snippet(getSnippet(page, lemmas))
-                    .relevance(getRelevance())
+                    .snippet(snippetService.getSnippet(page, lemmas))
+                    .relevance(1)
                     .build();
 
             searchDataList.add(searchData);
@@ -166,13 +166,6 @@ public class SearchServiceImpl implements SearchService {
 
     private String getTitle(String content) {
         return Jsoup.parse(content).title();
-    }
-
-    private String getSnippet(Page page, List<Lemma> lemmas) {
-        String text = page.getContent();
-
-
-        return "";
     }
 
     private double getRelevance() {

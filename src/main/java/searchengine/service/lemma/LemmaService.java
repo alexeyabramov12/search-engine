@@ -1,11 +1,10 @@
 package searchengine.service.lemma;
 
+import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 import searchengine.model.lemma.Lemma;
 import searchengine.model.page.Page;
 import searchengine.model.site.Site;
-
-import java.util.Map;
 
 
 @Service
@@ -13,7 +12,7 @@ public interface LemmaService {
 
     void add(Lemma lemma);
 
-    void addAll(Map<Lemma, Integer> lemmaIntegerMap, Page page);
+    void addAll(Document doc, Site site, Page page);
 
     Boolean existsByLemma(String lemma);
 
@@ -21,7 +20,7 @@ public interface LemmaService {
 
     Long getCountBySite(Site site);
 
-    Lemma getLemmaByLemma(String lemma);
+    Lemma getLemmaByLemma(String normalForms);
 
     void delete(Lemma lemma);
 

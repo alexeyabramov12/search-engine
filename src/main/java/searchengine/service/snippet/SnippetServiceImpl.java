@@ -1,0 +1,89 @@
+package searchengine.service.snippet;
+
+import lombok.RequiredArgsConstructor;
+import org.jsoup.Jsoup;
+import org.springframework.stereotype.Service;
+import searchengine.model.lemma.Lemma;
+import searchengine.model.page.Page;
+import searchengine.service.morphology.MorphologyService;
+
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@RequiredArgsConstructor
+public class SnippetServiceImpl implements SnippetService {
+
+    private final MorphologyService morphologyService;
+    private static final int COUNT_TO_ADD = 100;
+    private static final String CAPITAL_LETTERS = "[АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯABCDEFGHIJKLMNOPQRSTUVWXYZ]";
+    private static final String SYMBOLS = "[!. _,'@?//s]";
+
+    public String getSnippet(Page page, List<Lemma> lemmas) {
+        Map<String, String> lemmaWordMap = new LinkedHashMap<>();
+        String text = Jsoup.parse(page.getContent()).text();
+        List<String> normalForms = lemmas.stream().map(Lemma::getLemma).toList();
+
+        // Finding all word by normal form
+        for (String word : text.split("\\s+")) {
+            String normalForm = morphologyService.getNormalForm(word);
+            if (normalForms.contains(normalForm)) {
+                lemmaWordMap.put(normalForm, word);
+            }
+        }
+
+        return createSnippet(lemmaWordMap.values(), text);
+    }
+
+    private String createSnippet(Collection<String> words, String text) {
+        StringBuilder snippets = new StringBuilder();
+        int number = 0;
+        for (String w : words) {
+            int startWord = text.indexOf(w, number++);
+            int endWord = startWord + w.length() - 1;
+
+            String snippet = text.substring(getStartSnippet(text, startWord), getEndSnippet(text, endWord));
+
+            snippets.append(snippet.replace(w, "<b>".concat(w).concat("</b>")));
+            snippets.append("\n");
+        }
+
+        return snippets.toString();
+    }
+
+    private int getStartSnippet(String text, int startWord) {
+        int startSnippet = 0;
+        int start = startWord < COUNT_TO_ADD ? 0 : startWord - COUNT_TO_ADD;
+
+        for (int i = start; i >= 0; i--) {
+            String symbol = Character.toString(text.charAt(i));
+            if (symbol.matches(CAPITAL_LETTERS)) {
+                startSnippet = start - (start - i);
+                break;
+            }
+        }
+
+        return startSnippet;
+    }
+
+    private int getEndSnippet(String text, int endWord) {
+        int endSnippet = 0;
+        int end = endWord >= text.length() - COUNT_TO_ADD ? endWord : endWord + COUNT_TO_ADD;
+
+        if (end == endWord) {
+            return endWord;
+        }
+
+        for (int i = end; i <= text.length() - 1; i++) {
+            String symbol = Character.toString(text.charAt(i));
+            if (symbol.matches(SYMBOLS)) {
+                endSnippet = end + (i - end);
+                break;
+            }
+        }
+
+        return endSnippet;
+    }
+}

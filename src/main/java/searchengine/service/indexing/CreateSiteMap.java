@@ -53,8 +53,7 @@ public class CreateSiteMap extends RecursiveAction {
             if (statusCode < 400) {
                 String path = getPath(link);
                 if ((!pageService.existsByPath(path) || link.equals(site.getUrl())) && !stop) {
-                    Map<Lemma, Integer> lemmaIntegerMap = morphologyService.getLemmas(doc, site);
-                    addToDatabase(doc, statusCode, path, lemmaIntegerMap);
+                    addToDatabase(doc, statusCode, path);
                     parse(doc);
                 }
             }
@@ -70,16 +69,18 @@ public class CreateSiteMap extends RecursiveAction {
         Connection.Response response = getResponse(url);
         int statusCode = response.statusCode();
         Document doc = response.parse();
+
         if (statusCode > 400) {
             return false;
         }
+
         String path = getPath(url);
-        Map<Lemma, Integer> lemmaIntegerMap = morphologyService.getLemmas(doc, site);
+
         if (pageService.existsByPath(path)) {
             deleteDataByPath(path);
         }
 
-        addToDatabase(doc, statusCode, path, lemmaIntegerMap);
+        addToDatabase(doc, statusCode, path);
 
         return true;
     }
@@ -120,9 +121,12 @@ public class CreateSiteMap extends RecursiveAction {
         }
     }
 
-    private void addToDatabase(Document doc, int statusCode, String path, Map<Lemma, Integer> lemmaIntegerMap) {
-        site.setStatusTime(LocalDateTime.now());
+    private void addToDatabase(Document doc, int statusCode, String path) {
+        if (stop && pageService.existsByPath(path) && !link.equals(site.getUrl())) {
+            return;
+        }
 
+        site.setStatusTime(LocalDateTime.now());
         Page page = Page.builder()
                 .site(site)
                 .path(path)
@@ -130,12 +134,7 @@ public class CreateSiteMap extends RecursiveAction {
                 .content(doc.html())
                 .build();
 
-        if (stop && pageService.existsByPath(path) && !link.equals(site.getUrl())) {
-            return;
-        }
-
-        pageService.add(page);
-        lemmaService.addAll(lemmaIntegerMap, page);
+        lemmaService.addAll(doc, site, pageService.add(page));
 
         log.info("IN CreateSiteMap addToDatabase: add data by path - {}", path);
     }

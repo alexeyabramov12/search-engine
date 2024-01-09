@@ -14,7 +14,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "lemma")
-public class Lemma {
+public class  Lemma {
 
     @Id
     @Column(nullable = false)
