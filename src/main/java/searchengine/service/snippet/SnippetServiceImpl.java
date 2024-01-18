@@ -17,9 +17,9 @@ import java.util.Map;
 public class SnippetServiceImpl implements SnippetService {
 
     private final MorphologyService morphologyService;
-    private static final int COUNT_TO_ADD = 100;
+    private static final int COUNT_TO_ADD_SYMBOLS = 100;
     private static final String CAPITAL_LETTERS = "[АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯABCDEFGHIJKLMNOPQRSTUVWXYZ]";
-    private static final String SYMBOLS = "[!. _,'@?//s]";
+    private static final String SYMBOLS = "[;:!. _,'@?/\\s+]";
 
     public String getSnippet(Page page, List<Lemma> lemmas) {
         Map<String, String> lemmaWordMap = new LinkedHashMap<>();
@@ -40,11 +40,12 @@ public class SnippetServiceImpl implements SnippetService {
     private String createSnippet(Collection<String> words, String text) {
         StringBuilder snippets = new StringBuilder();
         int number = 0;
+        int countSymbols = COUNT_TO_ADD_SYMBOLS / words.size();
         for (String w : words) {
             int startWord = text.indexOf(w, number++);
             int endWord = startWord + w.length() - 1;
 
-            String snippet = text.substring(getStartSnippet(text, startWord), getEndSnippet(text, endWord));
+            String snippet = text.substring(getStartSnippet(text, startWord, countSymbols), getEndSnippet(text, endWord, countSymbols));
 
             snippets.append(snippet.replace(w, "<b>".concat(w).concat("</b>")));
             snippets.append("\n");
@@ -53,9 +54,9 @@ public class SnippetServiceImpl implements SnippetService {
         return snippets.toString();
     }
 
-    private int getStartSnippet(String text, int startWord) {
+    private int getStartSnippet(String text, int startWord, int countSymbols) {
         int startSnippet = 0;
-        int start = startWord < COUNT_TO_ADD ? 0 : startWord - COUNT_TO_ADD;
+        int start = startWord < countSymbols ? 0 : startWord - countSymbols;
 
         for (int i = start; i >= 0; i--) {
             String symbol = Character.toString(text.charAt(i));
@@ -68,9 +69,9 @@ public class SnippetServiceImpl implements SnippetService {
         return startSnippet;
     }
 
-    private int getEndSnippet(String text, int endWord) {
+    private int getEndSnippet(String text, int endWord, int countSymbols) {
         int endSnippet = 0;
-        int end = endWord >= text.length() - COUNT_TO_ADD ? endWord : endWord + COUNT_TO_ADD;
+        int end = endWord >= text.length() - countSymbols ? endWord : endWord + countSymbols;
 
         if (end == endWord) {
             return endWord;

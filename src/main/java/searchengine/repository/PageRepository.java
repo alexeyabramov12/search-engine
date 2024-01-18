@@ -11,7 +11,7 @@ import searchengine.model.site.Site;
 import javax.transaction.Transactional;
 
 @Repository
-public interface PageRepository extends JpaRepository<Page, Lemma> {
+public interface PageRepository extends JpaRepository<Page, Long> {
 
     Page findByPath(String path);
     Boolean existsByPath(String path);

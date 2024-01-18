@@ -50,9 +50,9 @@ public class ApiController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<SearchResponse> search(String query, Integer offset, Integer limit) {
-        log.info("In ApiController search: query - {} added or updated", query);
-        return ResponseEntity.ok(searchService.search(query.trim(), offset, limit));
+    public ResponseEntity<SearchResponse> search(String query, String site, Integer offset, Integer limit) {
+        log.info("In ApiController search: query - {}", query);
+        return ResponseEntity.ok(searchService.search(query.trim(), site, offset, limit));
     }
 
 }

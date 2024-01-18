@@ -97,12 +97,18 @@ public class LemmaServiceImpl implements LemmaService {
         String[] words = doc.text().split("\\s+");
         for (String word : words) {
             String normalForm = morphologyService.getNormalForm(word);
+
+            if (normalForm.isEmpty()) {
+                continue;
+            }
+
             Lemma lemma = Lemma
                     .builder()
                     .site(site)
                     .lemma(normalForm)
                     .frequency(1)
                     .build();
+
             if (lemmasMap.containsKey(lemma)) {
                 lemmasMap.put(lemma, lemmasMap.get(lemma) + 1);
             } else {

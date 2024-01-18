@@ -1,6 +1,5 @@
 package searchengine.dto.search;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,5 +12,5 @@ public class SearchResponse {
     private boolean result;
     private String error;
     private Integer count;
-    private List<SearchData> data;
+    private List<SearchDto> data;
 }
