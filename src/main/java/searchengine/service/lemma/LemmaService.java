@@ -6,6 +6,8 @@ import searchengine.model.lemma.Lemma;
 import searchengine.model.page.Page;
 import searchengine.model.site.Site;
 
+import java.util.List;
+
 
 @Service
 public interface LemmaService {
@@ -14,13 +16,15 @@ public interface LemmaService {
 
     void addAll(Document doc, Site site, Page page);
 
-    Boolean existsByLemma(String lemma);
+    Boolean existsByLemmaAndSite(String lemma, Site site);
 
     Long getCount();
 
     Long getCountBySite(Site site);
 
-    Lemma getLemmaByLemma(String normalForms);
+    Lemma getLemmaByLemmaAndSite(String normalForms, Site site);
+
+    List<Lemma> getLemmasByLemma(String normalForms);
 
     void delete(Lemma lemma);
 

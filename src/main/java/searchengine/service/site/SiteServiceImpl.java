@@ -11,25 +11,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SiteServiceImpl implements SiteService {
 
-    private final SiteRepository siteRepository;
+    private final SiteRepository repository;
 
     @Override
     public Site add(Site site) {
-        return siteRepository.save(site);
+        return repository.save(site);
     }
 
     @Override
     public List<Site> getAll() {
-        return siteRepository.findAll();
+        return repository.findAll();
+    }
+
+    @Override
+    public Site getByUrl(String url) {
+        return repository.findByUrl(url);
     }
 
     @Override
     public Long getCount() {
-        return siteRepository.count();
+        return repository.count();
     }
 
     @Override
     public void deleteAll() {
-        siteRepository.deleteAll();
+        repository.deleteAll();
     }
 }

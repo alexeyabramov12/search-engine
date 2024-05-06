@@ -1,11 +1,11 @@
 package searchengine.service.search;
 
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import searchengine.dto.search.SearchResponse;
 import searchengine.mapper.SearchMapper;
@@ -18,18 +18,22 @@ import searchengine.repository.SearchRepository;
 import searchengine.service.index.IndexService;
 import searchengine.service.lemma.LemmaService;
 import searchengine.service.morphology.MorphologyService;
+import searchengine.service.site.SiteService;
 import searchengine.service.snippet.SnippetService;
 
 import java.util.*;
 
+
+@Data
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SearchServiceImpl implements SearchService {
 
-    private final SearchRepository searchRepository;
+    private final SearchRepository repository;
     private final MorphologyService morphologyService;
     private final LemmaService lemmaService;
+    private final SiteService siteService;
     private final IndexService indexService;
     private final SnippetService snippetService;
     private final SearchMapper mapper;
@@ -43,27 +47,35 @@ public class SearchServiceImpl implements SearchService {
             log.info("In searchServiceImpl search: empty query");
             return searchResponse;
         }
-        Pageable pageable = PageRequest.of(offset, limit);
-        log.info("In searchServiceImpl search: query - {}", query);
+
+        Pageable pageable = PageRequest.of(offset == 0 ? 0 : offset / 10, limit);
+        log.info("In searchServiceImpl search: query - {}, offset - {}", query, offset);
         return getSearchResponse(query, site, pageable);
     }
 
+    @Override
+    public void deleteAll() {
+        repository.deleteAll();
+    }
+
     private boolean existsByQuery(String query) {
-        return searchRepository.existsByQuery(query);
+        return repository.existsByQuery(query);
     }
 
     private SearchResponse getSearchResponse(String query, String site, Pageable pageable) {
         SearchResponse searchResponse = new SearchResponse();
 
         if (existsByQuery(query)) {
-            searchResponse.setResult(true);
-            searchResponse.setCount(searchRepository.countByQuery(query));
+            // TODO: Get data with site.
             List<Search> data = getSearches(query, site, pageable);
             searchResponse.setData(data.stream().map(mapper::convertToDto).toList());
+            searchResponse.setResult(true);
+            searchResponse.setCount(repository.countByQuery(query));
+
             return searchResponse;
         }
 
-        List<Search> searchData = createSearch(query, site);
+        List<Search> searchData = createSearchList(query, site);
         if (searchData.isEmpty()) {
             searchResponse.setResult(false);
             searchResponse.setError("Указанная страница не найдена");
@@ -73,19 +85,17 @@ public class SearchServiceImpl implements SearchService {
 
         saveAll(searchData);
 
-        searchResponse.setCount(searchRepository.countByQuery(query));
+        searchResponse.setCount(repository.countByQuery(query));
         searchResponse.setResult(true);
         searchResponse.setData(getSearches(query, site, pageable).stream().map(mapper::convertToDto).toList());
 
         return searchResponse;
     }
 
-    private List<Search> createSearch(String query, String site) {
-        List<Lemma> lemmas = getLemmas(query);
+    private List<Search> createSearchList(String query, String site) {
+        List<Lemma> lemmas = getLemmas(query, site);
         List<Index> indexes = getIndexes(lemmas);
-        List<Page> pages = site == null ?
-                indexes.stream().map(Index::getPage).toList() :
-                indexes.stream().map(Index::getPage).filter(p -> p.getSite().getUrl().equals(site)).toList();
+        List<Page> pages = indexes.stream().map(Index::getPage).toList();
         if (pages.isEmpty()) {
             return new ArrayList<>();
         }
@@ -96,30 +106,34 @@ public class SearchServiceImpl implements SearchService {
         return searchData;
     }
 
+    // TODO: You have "site". Use it
     private List<Search> getSearches(String query, String site, Pageable pageable) {
-        return searchRepository.findAllByQuery(query, pageable);
+        return repository.findAllByQuery(query, pageable).getContent();
     }
 
     private void saveAll(List<Search> searchData) {
-        searchRepository.saveAll(searchData);
+        repository.saveAll(searchData);
     }
 
-    private List<Lemma> getLemmas(String query) {
+    // TODO: Search working wrong. I think, the problem in this method. Fix it.
+    private List<Lemma> getLemmas(String query, String site) {
         List<Lemma> lemmas = new ArrayList<>();
         String[] words = query.split("\\s+");
 
         for (String world : words) {
             String normalForm = morphologyService.getNormalForm(world);
+
             if (normalForm.isEmpty()) {
                 return new ArrayList<>();
             }
-            Lemma lemma = lemmaService.getLemmaByLemma(normalForm);
-            if (lemma == null) {
-                return new ArrayList<>();
-            }
-            lemmas.add(lemma);
-        }
 
+            if (site == null) {
+                List<Lemma> lemmaList = lemmaService.getLemmasByLemma(normalForm);
+                lemmas.addAll(lemmaList);
+            } else {
+                lemmas.add(lemmaService.getLemmaByLemmaAndSite(normalForm, siteService.getByUrl(site)));
+            }
+        }
 
         return lemmas.stream()
                 .filter(l -> l.getFrequency() < getAverageFrequency(lemmas) * 2)
@@ -132,34 +146,13 @@ public class SearchServiceImpl implements SearchService {
             return new ArrayList<>();
         }
 
-        Set<Page> pages = new HashSet<>();
         List<Index> indexes = new ArrayList<>();
-        boolean isFirstIteration = true;
 
         for (Lemma lemma : lemmas) {
-            List<Index> localIndexes = indexService.findAllByLemma(lemma);
-            indexes.addAll(localIndexes);
-            Set<Page> localPages = new HashSet<>();
-
-            for (Index index : localIndexes) {
-                localPages.add(index.getPage());
-            }
-
-            if (isFirstIteration) {
-                pages.addAll(localPages);
-                isFirstIteration = false;
-            } else {
-                pages.retainAll(localPages);
-            }
-
-            if (pages.isEmpty()) {
-                break;
-            }
+            indexes.addAll(indexService.findAllByLemma(lemma));
         }
 
-        return pages.stream()
-                .flatMap(page -> indexes.stream().filter(i -> i.getPage().equals(page)))
-                .toList();
+       return indexes;
     }
 
 

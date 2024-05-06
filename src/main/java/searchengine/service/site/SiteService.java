@@ -11,6 +11,8 @@ public interface SiteService {
 
     List<Site> getAll();
 
+    Site getByUrl(String url);
+
     Long getCount();
 
     void deleteAll();

@@ -13,7 +13,13 @@ import javax.persistence.Index;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "page", indexes = {@Index(columnList = "path", name = "path_index")})
+@Table(name = "page",
+        indexes = {
+                @Index(columnList = "path", name = "path_index")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"path", "site_id"})
+        })
 public class Page {
 
     @Id

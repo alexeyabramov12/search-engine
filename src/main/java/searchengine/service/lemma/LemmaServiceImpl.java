@@ -15,6 +15,7 @@ import searchengine.service.index.IndexService;
 import searchengine.service.morphology.MorphologyService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -42,18 +43,18 @@ public class LemmaServiceImpl implements LemmaService {
                     .rank(lemmaIntegerMap.get(l))
                     .build();
 
-            if (!existsByLemma(l.getLemma()) && !CreateSiteMap.isStop()) {
+            if (!existsByLemmaAndSite(l.getLemma(), site) && !CreateSiteMap.isStop()) {
                 try {
                     lemmaRepository.save(l);
                     index.setLemma(l);
                     indexService.add(index);
                 } catch (DataIntegrityViolationException e) {
-                    log.error("In LemmaServiceImpl addAll: Duplicate Lemma: " + l);
+                    log.error("In LemmaServiceImpl addAll: Duplicate Lemma: {}", l);
                 }
 
             }
-            if (existsByLemma(l.getLemma())) {
-                Lemma lemma = getLemmaByLemma(l.getLemma());
+            if (existsByLemmaAndSite(l.getLemma(), site)) {
+                Lemma lemma = getLemmaByLemmaAndSite(l.getLemma(), site);
                 lemma.setFrequency(lemma.getFrequency() + 1);
                 lemmaRepository.save(lemma);
                 index.setLemma(lemma);
@@ -63,8 +64,8 @@ public class LemmaServiceImpl implements LemmaService {
     }
 
     @Override
-    public Boolean existsByLemma(String lemma) {
-        return lemmaRepository.existsByLemma(lemma);
+    public Boolean existsByLemmaAndSite(String lemma, Site site) {
+        return lemmaRepository.existsByLemmaAndSite(lemma, site);
     }
 
     @Override
@@ -78,8 +79,13 @@ public class LemmaServiceImpl implements LemmaService {
     }
 
     @Override
-    public Lemma getLemmaByLemma(String lemma) {
-        return lemmaRepository.findByLemma(lemma);
+    public Lemma getLemmaByLemmaAndSite(String lemma, Site site) {
+        return lemmaRepository.findByLemmaAndSite(lemma, site);
+    }
+
+    @Override
+    public List<Lemma> getLemmasByLemma(String normalForms) {
+       return lemmaRepository.findAllByLemma(normalForms);
     }
 
     @Override

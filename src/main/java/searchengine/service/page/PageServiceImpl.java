@@ -24,8 +24,8 @@ public class PageServiceImpl implements PageService {
     }
 
     @Override
-    public Boolean existsByPath(String path) {
-        return pageRepository.existsByPath(path);
+    public Boolean existsByPathAndSite(String path, Site site) {
+        return pageRepository.existsByPathAndSite(path, site);
     }
 
     @Override

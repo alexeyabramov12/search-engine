@@ -13,7 +13,9 @@ import java.util.Objects;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "lemma")
+@Table(name = "lemma", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"lemma", "site_id"})
+})
 public class  Lemma {
 
     @Id
@@ -26,7 +28,7 @@ public class  Lemma {
     @JoinColumn(name = "site_id", nullable = false)
     private Site site;
 
-    @Column(name = "lemma", nullable = false, unique = true)
+    @Column(name = "lemma", nullable = false)
     private String lemma;
 
     @Column(name = "frequency", nullable = false)

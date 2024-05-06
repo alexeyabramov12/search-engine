@@ -19,7 +19,7 @@ public class MorphologyServiceImpl implements MorphologyService {
     private final RussianLuceneMorphology russianLuceneMorphology;
     private final EnglishLuceneMorphology englishLuceneMorphology;
 
-    private static final List<String> WRONG_TEGS = List.of("СОЮЗ", "МЕЖД", "МС", "ПРЕДЛ", "ВВОДН", "ЧАСТ", "CONJ", "PART");
+    private static final List<String> WRONG_TAGS = List.of("СОЮЗ", "МЕЖД", "МС", "ПРЕДЛ", "ВВОДН", "ЧАСТ", "CONJ", "PART");
     private static final String RUSSIAN_ALPHABET = "[а-яА-Я]+";
     private static final String ENGLISH_ALPHABET = "[a-zA-z]+";
 
@@ -60,7 +60,7 @@ public class MorphologyServiceImpl implements MorphologyService {
             return false;
         }
         String morphInfo = luceneMorphology.getMorphInfo(word).toString();
-        for (String teg : WRONG_TEGS) {
+        for (String teg : WRONG_TAGS) {
             if (morphInfo.contains(teg)) {
                 return false;
             }

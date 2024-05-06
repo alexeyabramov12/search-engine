@@ -1,5 +1,6 @@
 package searchengine.service.indexing;
 
+import com.sun.xml.bind.v2.TODO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +53,7 @@ public class CreateSiteMap extends RecursiveAction {
 
             if (statusCode < 400) {
                 String path = getPath(link);
-                if ((!pageService.existsByPath(path) || link.equals(site.getUrl())) && !stop) {
+                if ((!pageService.existsByPathAndSite(path, site) && link.contains(site.getUrl())) && !stop) {
                     addToDatabase(doc, statusCode, path);
                     parse(doc);
                 }
@@ -65,6 +66,7 @@ public class CreateSiteMap extends RecursiveAction {
         }
     }
 
+  //  TODO: This  method doesn't work. Fix it
     public boolean createOrUpdatePage(String url) throws IOException {
         Connection.Response response = getResponse(url);
         int statusCode = response.statusCode();
@@ -76,9 +78,9 @@ public class CreateSiteMap extends RecursiveAction {
 
         String path = getPath(url);
 
-        if (pageService.existsByPath(path)) {
-            deleteDataByPath(path);
-        }
+//        if (pageService.existsByPath(path)) {
+//            deleteDataByPath(path);
+//        }
 
         addToDatabase(doc, statusCode, path);
 
@@ -109,7 +111,7 @@ public class CreateSiteMap extends RecursiveAction {
             }
 
             String path = getPath(url);
-            if (!pageService.existsByPath(path)) {
+            if (!pageService.existsByPathAndSite(path, site)) {
                 CreateSiteMap task = new CreateSiteMap(site, url, siteService, pageService, lemmaService, indexService, connectionToSite, morphologyService);
                 task.fork();
                 subTasks.add(task);
@@ -122,10 +124,6 @@ public class CreateSiteMap extends RecursiveAction {
     }
 
     private void addToDatabase(Document doc, int statusCode, String path) {
-        if (stop && pageService.existsByPath(path) && !link.equals(site.getUrl())) {
-            return;
-        }
-
         site.setStatusTime(LocalDateTime.now());
         Page page = Page.builder()
                 .site(site)

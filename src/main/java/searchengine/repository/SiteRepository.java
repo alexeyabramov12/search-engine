@@ -6,4 +6,5 @@ import searchengine.model.site.Site;
 
 @Repository
 public interface SiteRepository extends JpaRepository<Site, Integer> {
+    Site findByUrl(String url);
 }

@@ -3,10 +3,7 @@ package searchengine.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import searchengine.dto.indexing.IndexingResponse;
 import searchengine.dto.search.SearchResponse;
 import searchengine.dto.statistics.StatisticsResponse;
@@ -16,8 +13,8 @@ import searchengine.service.statistics.StatisticsService;
 
 @Slf4j
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class ApiController {
 
     private final StatisticsService statisticsService;
@@ -44,13 +41,16 @@ public class ApiController {
     }
 
     @PostMapping("/indexPage")
-    public ResponseEntity<IndexingResponse> addOrUpdatePage(String url) {
+    public ResponseEntity<IndexingResponse> addOrUpdatePage(@RequestParam(value = "url") String url) {
         log.info("In ApiController addOrUpdatePage: data with url - {} added or updated", url);
         return ResponseEntity.ok(indexingService.addOrUpdatePage(url.trim()));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<SearchResponse> search(String query, String site, Integer offset, Integer limit) {
+    public ResponseEntity<SearchResponse> search(@RequestParam(value = "query") String query,
+                                                 @RequestParam(value = "site", required = false) String site,
+                                                 @RequestParam(value = "offset", defaultValue = "0") Integer offset,
+                                                 @RequestParam(value = "limit", defaultValue = "10") Integer limit) {
         log.info("In ApiController search: query - {}", query);
         return ResponseEntity.ok(searchService.search(query.trim(), site, offset, limit));
     }

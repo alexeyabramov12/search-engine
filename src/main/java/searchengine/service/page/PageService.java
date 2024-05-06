@@ -12,7 +12,7 @@ public interface PageService {
 
     Page add(Page page);
 
-    Boolean existsByPath(String path);
+    Boolean existsByPathAndSite(String path, Site site);
 
     Long getCountBySite(Site site);
 

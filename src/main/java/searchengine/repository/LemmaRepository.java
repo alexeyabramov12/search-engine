@@ -7,14 +7,17 @@ import searchengine.model.lemma.Lemma;
 import searchengine.model.site.Site;
 
 import javax.transaction.Transactional;
+import java.util.List;
 
 public interface LemmaRepository extends JpaRepository<Lemma, Long> {
 
-    Boolean existsByLemma(String lemma);
+    Boolean existsByLemmaAndSite(String lemma, Site site);
 
     Long countBySite(Site site);
 
-    Lemma findByLemma(String lemma);
+    Lemma findByLemmaAndSite(String lemma, Site site);
+
+    List<Lemma> findAllByLemma(String lemma);
 
     @Modifying
     @Transactional

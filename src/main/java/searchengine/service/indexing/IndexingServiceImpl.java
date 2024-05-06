@@ -12,6 +12,7 @@ import searchengine.service.index.IndexService;
 import searchengine.service.lemma.LemmaService;
 import searchengine.service.morphology.MorphologyService;
 import searchengine.service.page.PageService;
+import searchengine.service.search.SearchService;
 import searchengine.service.site.SiteService;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ public class IndexingServiceImpl implements IndexingService {
     private final PageService pageService;
     private final LemmaService lemmaService;
     private final IndexService indexService;
+    private final SearchService searchService;
     private final SitesList sitesList;
     private final ConnectionToSite connectionToSite;
     private final MorphologyService morphologyService;
@@ -193,6 +195,7 @@ public class IndexingServiceImpl implements IndexingService {
         lemmaService.deleteAllLemmas();
         pageService.deleteAllPages();
         siteService.deleteAll();
+        searchService.deleteAll();
         log.info("In IndexingServiceImpl deleteData: deleteData");
     }
 

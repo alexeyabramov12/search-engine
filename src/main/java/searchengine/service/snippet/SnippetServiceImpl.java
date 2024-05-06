@@ -26,7 +26,7 @@ public class SnippetServiceImpl implements SnippetService {
         String text = Jsoup.parse(page.getContent()).text();
         List<String> normalForms = lemmas.stream().map(Lemma::getLemma).toList();
 
-        // Finding all word by normal form
+        // Finding all words by normal form
         for (String word : text.split("\\s+")) {
             String normalForm = morphologyService.getNormalForm(word);
             if (normalForms.contains(normalForm)) {
