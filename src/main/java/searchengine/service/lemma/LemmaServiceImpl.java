@@ -10,7 +10,7 @@ import searchengine.model.lemma.Lemma;
 import searchengine.model.page.Page;
 import searchengine.model.site.Site;
 import searchengine.repository.LemmaRepository;
-import searchengine.service.indexing.CreateSiteMap;
+import searchengine.service.indexing.Parsing;
 import searchengine.service.index.IndexService;
 import searchengine.service.morphology.MorphologyService;
 
@@ -43,7 +43,7 @@ public class LemmaServiceImpl implements LemmaService {
                     .rank(lemmaIntegerMap.get(l))
                     .build();
 
-            if (!existsByLemmaAndSite(l.getLemma(), site) && !CreateSiteMap.isStop()) {
+            if (!existsByLemmaAndSite(l.getLemma(), site) && !Parsing.isStop()) {
                 try {
                     lemmaRepository.save(l);
                     index.setLemma(l);
@@ -85,7 +85,7 @@ public class LemmaServiceImpl implements LemmaService {
 
     @Override
     public List<Lemma> getLemmasByLemma(String normalForms) {
-       return lemmaRepository.findAllByLemma(normalForms);
+        return lemmaRepository.findAllByLemma(normalForms);
     }
 
     @Override

@@ -11,6 +11,8 @@ import searchengine.model.search.Search;
 public interface SearchRepository extends JpaRepository<Search, Integer> {
 
     Page<Search> findAllByQuery(String query, Pageable pageable);
+
     boolean existsByQuery(String query);
+
     Integer countByQuery(String query);
 }

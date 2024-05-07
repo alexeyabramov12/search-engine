@@ -13,6 +13,7 @@ import javax.transaction.Transactional;
 public interface PageRepository extends JpaRepository<Page, Long> {
 
     Page findByPathAndSite(String path, Site site);
+
     Boolean existsByPathAndSite(String path, Site site);
 
     Long countBySite(Site site);

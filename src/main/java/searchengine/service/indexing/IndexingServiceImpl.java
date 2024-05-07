@@ -2,6 +2,7 @@ package searchengine.service.indexing;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Connection;
 import org.springframework.stereotype.Service;
 import searchengine.config.ConnectionToSite;
 import searchengine.config.SitesList;
@@ -9,8 +10,8 @@ import searchengine.dto.indexing.IndexingResponse;
 import searchengine.model.site.Site;
 import searchengine.model.site.Status;
 import searchengine.service.index.IndexService;
+import searchengine.service.indexing.sitemap.SiteMapService;
 import searchengine.service.lemma.LemmaService;
-import searchengine.service.morphology.MorphologyService;
 import searchengine.service.page.PageService;
 import searchengine.service.search.SearchService;
 import searchengine.service.site.SiteService;
@@ -28,6 +29,7 @@ import java.util.concurrent.ForkJoinPool;
 @RequiredArgsConstructor
 public class IndexingServiceImpl implements IndexingService {
 
+    private final SiteMapService siteMapService;
     private final SiteService siteService;
     private final PageService pageService;
     private final LemmaService lemmaService;
@@ -35,7 +37,6 @@ public class IndexingServiceImpl implements IndexingService {
     private final SearchService searchService;
     private final SitesList sitesList;
     private final ConnectionToSite connectionToSite;
-    private final MorphologyService morphologyService;
     private final List<ForkJoinPool> forkJoinPools = new ArrayList<>();
     private final List<Thread> threads = new ArrayList<>();
 
@@ -68,7 +69,7 @@ public class IndexingServiceImpl implements IndexingService {
             return indexingResponse;
         }
 
-        CreateSiteMap.setStop(false);
+        Parsing.setStop(false);
 
         if (siteService.getAll().isEmpty()) {
             addSites();
@@ -97,7 +98,7 @@ public class IndexingServiceImpl implements IndexingService {
             return indexingResponse;
         }
 
-        CreateSiteMap.setStop(true);
+        Parsing.setStop(true);
         forkJoinPools.forEach(ForkJoinPool::shutdownNow);
         threads.forEach(Thread::interrupt);
 
@@ -134,9 +135,11 @@ public class IndexingServiceImpl implements IndexingService {
             return indexingResponse;
         }
 
-        CreateSiteMap createSiteMap = new CreateSiteMap(site, url, siteService, pageService, lemmaService, indexService, connectionToSite, morphologyService);
+        Parsing parsing = new Parsing(site, url, connectionToSite, siteMapService);
         try {
-            if (!createSiteMap.createOrUpdatePage(url)) {
+            String path = parsing.getPath(url);
+            Connection.Response response = parsing.getResponse(url);
+            if (!siteMapService.createOrUpdatePage(response, path, site)) {
                 throw new RuntimeException();
             }
         } catch (RuntimeException | IOException e) {
@@ -178,10 +181,10 @@ public class IndexingServiceImpl implements IndexingService {
 
 
     private void startPoll(Site site) {
-        CreateSiteMap createSiteMap = new CreateSiteMap(site, site.getUrl(), siteService, pageService, lemmaService, indexService, connectionToSite, morphologyService);
+        Parsing parsing = new Parsing(site, site.getUrl(), connectionToSite, siteMapService);
         ForkJoinPool forkJoinPool = new ForkJoinPool();
         forkJoinPools.add(forkJoinPool);
-        forkJoinPool.invoke(createSiteMap);
+        forkJoinPool.invoke(parsing);
 
         site.setStatus(Status.INDEXED);
         site.setStatusTime(LocalDateTime.now());
