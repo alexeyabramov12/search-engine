@@ -8,7 +8,7 @@ import searchengine.model.site.Site;
 @Service
 public interface PageService {
 
-    Page getPageByPath(String path);
+    Page getPageByPathAndSite(String path, Site site);
 
     Page add(Page page);
 
@@ -20,6 +20,6 @@ public interface PageService {
 
     void deleteAllPages();
 
-    void deleteByPath(String path);
+    void deleteByPathAndSite(String path, Site site);
 
 }

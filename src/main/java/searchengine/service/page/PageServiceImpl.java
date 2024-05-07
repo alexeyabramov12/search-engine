@@ -14,8 +14,8 @@ public class PageServiceImpl implements PageService {
 
 
     @Override
-    public Page getPageByPath(String path) {
-        return pageRepository.findByPath(path);
+    public Page getPageByPathAndSite(String path, Site site) {
+        return pageRepository.findByPathAndSite(path, site);
     }
 
     @Override
@@ -44,7 +44,7 @@ public class PageServiceImpl implements PageService {
     }
 
     @Override
-    public void deleteByPath(String path) {
-        pageRepository.deleteByPath(path);
+    public void deleteByPathAndSite(String path, Site site) {
+        pageRepository.deleteByPathAndSite(path, site);
     }
 }

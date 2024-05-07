@@ -12,7 +12,7 @@ import javax.transaction.Transactional;
 @Repository
 public interface PageRepository extends JpaRepository<Page, Long> {
 
-    Page findByPath(String path);
+    Page findByPathAndSite(String path, Site site);
     Boolean existsByPathAndSite(String path, Site site);
 
     Long countBySite(Site site);
@@ -23,6 +23,6 @@ public interface PageRepository extends JpaRepository<Page, Long> {
     void deleteAllPages();
 
     @Transactional
-    void deleteByPath(String path);
+    void deleteByPathAndSite(String path, Site site);
 
 }

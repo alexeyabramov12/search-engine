@@ -1,6 +1,5 @@
 package searchengine.service.indexing;
 
-import com.sun.xml.bind.v2.TODO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -66,21 +65,20 @@ public class CreateSiteMap extends RecursiveAction {
         }
     }
 
-  //  TODO: This  method doesn't work. Fix it
     public boolean createOrUpdatePage(String url) throws IOException {
         Connection.Response response = getResponse(url);
         int statusCode = response.statusCode();
         Document doc = response.parse();
 
-        if (statusCode > 400) {
+        if (statusCode > 400 || site == null) {
             return false;
         }
 
         String path = getPath(url);
 
-//        if (pageService.existsByPath(path)) {
-//            deleteDataByPath(path);
-//        }
+        if (pageService.existsByPathAndSite(path, site)) {
+            deleteDataByPath(path);
+        }
 
         addToDatabase(doc, statusCode, path);
 
@@ -138,7 +136,7 @@ public class CreateSiteMap extends RecursiveAction {
     }
 
     private void deleteDataByPath(String path) {
-        Page page = pageService.getPageByPath(path);
+        Page page = pageService.getPageByPathAndSite(path, site);
         List<Index> indices = indexService.findAllByPage(page);
         List<Lemma> lemmas = new ArrayList<>();
         indices.forEach(index -> lemmas.add(index.getLemma()));
@@ -151,7 +149,7 @@ public class CreateSiteMap extends RecursiveAction {
             }
         });
         indexService.deleteAllByEntities(indices);
-        pageService.deleteByPath(path);
+        pageService.deleteByPathAndSite(path, site);
         log.info("IN CreateSiteMap deleteDataByPath: delete data by path - {}", path);
     }
 
