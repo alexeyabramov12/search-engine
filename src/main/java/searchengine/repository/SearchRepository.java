@@ -12,7 +12,17 @@ public interface SearchRepository extends JpaRepository<Search, Integer> {
 
     Page<Search> findAllByQuery(String query, Pageable pageable);
 
+    Page<Search> findAllByQueryAndSite(String query, String site, Pageable pageable);
+
     boolean existsByQuery(String query);
 
+    boolean existsByQueryAndSite(String query, String site);
+
+    boolean existsBySiteAndUri(String site, String uri);
+
     Integer countByQuery(String query);
+
+    Integer countByQueryAndSite(String query, String site);
+
+    void deleteAllBySiteAndUri(String site, String uri);
 }

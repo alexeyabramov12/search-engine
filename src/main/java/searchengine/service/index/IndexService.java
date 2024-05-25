@@ -6,13 +6,12 @@ import searchengine.model.lemma.Lemma;
 import searchengine.model.page.Page;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public interface IndexService {
 
-    Index add(Index index);
-
-    void addAll(Iterable<Index> indices);
+    void createIndexes(Map<Lemma, Integer> lemmaIntegerMap, Page page);
 
     void deleteAllIndices();
 

@@ -99,7 +99,7 @@ public class IndexingServiceImpl implements IndexingService {
         }
 
         Parsing.setStop(true);
-        forkJoinPools.forEach(ForkJoinPool::shutdownNow);
+        forkJoinPools.forEach(ForkJoinPool::shutdown);
         threads.forEach(Thread::interrupt);
 
         siteService.getAll().forEach(site -> {
@@ -201,5 +201,4 @@ public class IndexingServiceImpl implements IndexingService {
         searchService.deleteAll();
         log.info("In IndexingServiceImpl deleteData: deleteData");
     }
-
 }

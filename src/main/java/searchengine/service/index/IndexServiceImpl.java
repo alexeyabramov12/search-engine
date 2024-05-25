@@ -1,46 +1,58 @@
 package searchengine.service.index;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import searchengine.model.index.Index;
 import searchengine.model.lemma.Lemma;
 import searchengine.model.page.Page;
 import searchengine.repository.IndexRepository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class IndexServiceImpl implements IndexService {
 
-    private final IndexRepository indexRepository;
+    private final IndexRepository repository;
+
 
     @Override
-    public Index add(Index index) {
-        return indexRepository.save(index);
-    }
-
-    @Override
-    public void addAll(Iterable<Index> indices) {
-        indexRepository.saveAll(indices);
+    public void createIndexes(Map<Lemma, Integer> lemmaIntegerMap, Page page) {
+        Set<Lemma> lemmas = lemmaIntegerMap.keySet();
+        List<Index> indexes = new ArrayList<>();
+        for (Lemma l : lemmas) {
+            Index index = Index
+                    .builder()
+                    .page(page)
+                    .rank(lemmaIntegerMap.get(l))
+                    .lemma(l)
+                    .build();
+            indexes.add(index);
+        }
+        repository.saveAll(indexes);
     }
 
     @Override
     public void deleteAllIndices() {
-        indexRepository.deleteAllIndices();
+        repository.deleteAllIndices();
     }
 
     @Override
     public void deleteAllByEntities(List<Index> indices) {
-        indexRepository.deleteAll();
+        repository.deleteAll();
     }
 
     @Override
     public List<Index> findAllByPage(Page page) {
-        return indexRepository.findAllByPage(page);
+        return repository.findAllByPage(page);
     }
 
     public List<Index> findAllByLemma(Lemma lemma) {
-        return indexRepository.findAllByLemma(lemma);
+        return repository.findAllByLemma(lemma);
     }
 }

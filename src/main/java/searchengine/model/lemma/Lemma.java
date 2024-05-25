@@ -24,7 +24,7 @@ public class  Lemma {
     private Long id;
 
     @ToString.Exclude
-    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = false)
     private Site site;
 
@@ -39,11 +39,11 @@ public class  Lemma {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Lemma lemma1 = (Lemma) o;
-        return frequency == lemma1.frequency && Objects.equals(site, lemma1.site) && Objects.equals(lemma, lemma1.lemma);
+        return Objects.equals(site, lemma1.site) && Objects.equals(lemma, lemma1.lemma);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(site, lemma, frequency);
+        return Objects.hash(site, lemma);
     }
 }

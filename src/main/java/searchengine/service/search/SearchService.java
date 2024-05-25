@@ -7,6 +7,11 @@ import searchengine.dto.search.SearchResponse;
 public interface SearchService {
 
     SearchResponse search(String query, String site, Integer offset, Integer limit);
+
+    boolean existsBySiteAndUri(String site, String uri);
+
     void deleteAll();
+
+    void deleteAllBySiteAndUri(String site, String uri);
 
 }

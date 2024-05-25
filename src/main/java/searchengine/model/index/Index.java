@@ -22,12 +22,12 @@ public class Index {
     private Long id;
 
     @ToString.Exclude
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "page_id", foreignKey = @ForeignKey(name = "custom_fk_name"), nullable = false)
     private Page page;
 
     @ToString.Exclude
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "lemma_id", nullable = false)
     private Lemma lemma;
 

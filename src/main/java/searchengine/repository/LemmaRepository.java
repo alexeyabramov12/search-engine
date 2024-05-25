@@ -19,6 +19,8 @@ public interface LemmaRepository extends JpaRepository<Lemma, Long> {
 
     List<Lemma> findAllByLemma(String lemma);
 
+    List<Lemma> findAllByLemmaAndSite(String lemma, Site site);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM Lemma")

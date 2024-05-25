@@ -48,9 +48,14 @@ public class SearchServiceImpl implements SearchService {
             return searchResponse;
         }
 
-        Pageable pageable = PageRequest.of(offset == 0 ? 0 : offset / 10, limit);
+        Pageable pageable = PageRequest.of(offset == 0 ? 0 : offset / limit, limit);
         log.info("In searchServiceImpl search: query - {}, offset - {}", query, offset);
         return getSearchResponse(query, site, pageable);
+    }
+
+    @Override
+    public boolean existsBySiteAndUri(String site, String uri) {
+        return repository.existsBySiteAndUri(site, uri);
     }
 
     @Override
@@ -58,38 +63,43 @@ public class SearchServiceImpl implements SearchService {
         repository.deleteAll();
     }
 
-    private boolean existsByQuery(String query) {
-        return repository.existsByQuery(query);
+    @Override
+    public void deleteAllBySiteAndUri(String site, String uri) {
+        repository.deleteAllBySiteAndUri(site, uri);
     }
+
 
     private SearchResponse getSearchResponse(String query, String site, Pageable pageable) {
         SearchResponse searchResponse = new SearchResponse();
+        boolean exist = site != null ? existsByQueryAndSite(query, site) : existsByQuery(query);
 
-        if (existsByQuery(query)) {
-            // TODO: Get data with site.
+        if (exist) {
             List<Search> data = getSearches(query, site, pageable);
             searchResponse.setData(data.stream().map(mapper::convertToDto).toList());
-            searchResponse.setResult(true);
-            searchResponse.setCount(repository.countByQuery(query));
+            searchResponse.setCount(getCount(query, site));
 
             return searchResponse;
         }
 
         List<Search> searchData = createSearchList(query, site);
+
         if (searchData.isEmpty()) {
             searchResponse.setResult(false);
-            searchResponse.setError("Указанная страница не найдена");
+            searchResponse.setError(String.format("По запросу : \"%s\" найдено 0 результатов", query));
             log.info("In searchServiceImpl search: not found any pages for query - {}", query);
             return searchResponse;
         }
 
         saveAll(searchData);
 
-        searchResponse.setCount(repository.countByQuery(query));
-        searchResponse.setResult(true);
+        searchResponse.setCount(getCount(query, site));
         searchResponse.setData(getSearches(query, site, pageable).stream().map(mapper::convertToDto).toList());
 
         return searchResponse;
+    }
+
+    private Integer getCount(String query, String site) {
+        return site != null ? repository.countByQueryAndSite(query, site) : repository.countByQuery(query);
     }
 
     private List<Search> createSearchList(String query, String site) {
@@ -106,16 +116,16 @@ public class SearchServiceImpl implements SearchService {
         return searchData;
     }
 
-    // TODO: You have "site". Use it
     private List<Search> getSearches(String query, String site, Pageable pageable) {
-        return repository.findAllByQuery(query, pageable).getContent();
+        return site != null ? repository.findAllByQueryAndSite(query, site, pageable).getContent() :
+                repository.findAllByQuery(query, pageable).getContent();
     }
 
     private void saveAll(List<Search> searchData) {
         repository.saveAll(searchData);
     }
 
-    // TODO: Search working wrong. I think, the problem in this method. Fix it.
+
     private List<Lemma> getLemmas(String query, String site) {
         List<Lemma> lemmas = new ArrayList<>();
         String[] words = query.split("\\s+");
@@ -127,12 +137,8 @@ public class SearchServiceImpl implements SearchService {
                 return new ArrayList<>();
             }
 
-            if (site == null) {
-                List<Lemma> lemmaList = lemmaService.getLemmasByLemma(normalForm);
-                lemmas.addAll(lemmaList);
-            } else {
-                lemmas.add(lemmaService.getLemmaByLemmaAndSite(normalForm, siteService.getByUrl(site)));
-            }
+            lemmas.addAll(site != null ? lemmaService.getLemmasByLemmaAndSite(normalForm, siteService.getByUrl(site)) :
+                    lemmaService.getLemmasByLemma(normalForm));
         }
 
         return lemmas.stream()
@@ -152,9 +158,16 @@ public class SearchServiceImpl implements SearchService {
             indexes.addAll(indexService.findAllByLemma(lemma));
         }
 
-       return indexes;
+        return indexes;
     }
 
+    private boolean existsByQuery(String query) {
+        return repository.existsByQuery(query);
+    }
+
+    private boolean existsByQueryAndSite(String query, String site) {
+        return repository.existsByQueryAndSite(query, site);
+    }
 
     private int getAverageFrequency(List<Lemma> lemmas) {
         int sumFrequency = 0;

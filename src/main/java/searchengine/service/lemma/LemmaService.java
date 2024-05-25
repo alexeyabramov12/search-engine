@@ -3,18 +3,18 @@ package searchengine.service.lemma;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 import searchengine.model.lemma.Lemma;
-import searchengine.model.page.Page;
 import searchengine.model.site.Site;
 
 import java.util.List;
+import java.util.Map;
 
 
 @Service
 public interface LemmaService {
 
-    void add(Lemma lemma);
+    Map<Lemma, Integer> getLemmasIntegerMap(Document doc, Site site);
 
-    void addAll(Document doc, Site site, Page page);
+    void add(Lemma lemma);
 
     Boolean existsByLemmaAndSite(String lemma, Site site);
 
@@ -22,7 +22,7 @@ public interface LemmaService {
 
     Long getCountBySite(Site site);
 
-    Lemma getLemmaByLemmaAndSite(String normalForms, Site site);
+    List<Lemma> getLemmasByLemmaAndSite(String normalForms, Site site);
 
     List<Lemma> getLemmasByLemma(String normalForms);
 

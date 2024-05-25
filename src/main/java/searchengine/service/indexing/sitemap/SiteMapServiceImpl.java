@@ -12,6 +12,7 @@ import searchengine.model.site.Site;
 import searchengine.service.index.IndexService;
 import searchengine.service.lemma.LemmaService;
 import searchengine.service.page.PageService;
+import searchengine.service.search.SearchService;
 import searchengine.service.site.SiteService;
 
 import java.io.IOException;
@@ -28,6 +29,7 @@ public class SiteMapServiceImpl implements SiteMapService {
     private final SiteService siteService;
     private final LemmaService lemmaService;
     private final IndexService indexService;
+    private final SearchService searchService;
 
 
     @Override
@@ -38,17 +40,16 @@ public class SiteMapServiceImpl implements SiteMapService {
     @Override
     public void createSiteMap(Document doc, int statusCode, String path, Site site) {
         site.setStatusTime(LocalDateTime.now());
-        Page page = Page.builder()
+        Page page = pageService.add(Page.builder()
                 .site(site)
                 .path(path)
                 .code(statusCode)
                 .content(doc.html())
-                .build();
+                .build());
 
+        indexService.createIndexes(lemmaService.getLemmasIntegerMap(doc, site), page);
 
-        lemmaService.addAll(doc, site, pageService.add(page));
-
-        log.info("IN CreateSiteMap addToDatabase: add data by path - {}", path);
+        log.info("IN SiteMapServiceImpl createSiteMap: add data by path - {}", path);
     }
 
     @Override
@@ -80,6 +81,7 @@ public class SiteMapServiceImpl implements SiteMapService {
         List<Index> indices = indexService.findAllByPage(page);
         List<Lemma> lemmas = new ArrayList<>();
         indices.forEach(index -> lemmas.add(index.getLemma()));
+
         lemmas.forEach(lemma -> {
             if (lemma.getFrequency() == 1) {
                 lemmaService.delete(lemma);
@@ -88,8 +90,13 @@ public class SiteMapServiceImpl implements SiteMapService {
                 lemmaService.add(lemma);
             }
         });
+
         indexService.deleteAllByEntities(indices);
         pageService.deleteByPathAndSite(path, site);
+        if (searchService.existsBySiteAndUri(site.getUrl(), path)) {
+            searchService.deleteAllBySiteAndUri(site.getUrl(), path);
+        }
+
         log.info("IN CreateSiteMap deleteDataByPath: delete data by path - {}", path);
     }
 

@@ -28,7 +28,7 @@ public class Page {
     private Long id;
 
     @ToString.Exclude
-    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = false)
     private Site site;
 
