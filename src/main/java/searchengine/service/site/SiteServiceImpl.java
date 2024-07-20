@@ -3,7 +3,7 @@ package searchengine.service.site;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import searchengine.model.site.Site;
-import searchengine.repository.SiteRepository;
+import searchengine.repository.site.SiteRepository;
 
 import java.util.List;
 

@@ -7,7 +7,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import searchengine.model.lemma.Lemma;
 import searchengine.model.site.Site;
-import searchengine.repository.LemmaRepository;
+import searchengine.repository.lemma.LemmaRepository;
 import searchengine.service.indexing.Parsing;
 import searchengine.service.morphology.MorphologyService;
 

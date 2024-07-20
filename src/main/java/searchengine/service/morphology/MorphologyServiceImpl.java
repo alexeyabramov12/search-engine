@@ -33,11 +33,11 @@ public class MorphologyServiceImpl implements MorphologyService {
             return result;
         }
         if (getLanguage(wordLowerCase).equals("RUSSIAN")) {
-            result = !checkWord(wordLowerCase, russianLuceneMorphology) ? ""
+            result = checkWord(wordLowerCase, russianLuceneMorphology) ? ""
                     : russianLuceneMorphology.getNormalForms(wordLowerCase).toString();
         }
         if (getLanguage(wordLowerCase).equals("ENGLISH")) {
-            result = !checkWord(wordLowerCase, englishLuceneMorphology) ? ""
+            result = checkWord(wordLowerCase, englishLuceneMorphology) ? ""
                     : englishLuceneMorphology.getNormalForms(wordLowerCase).toString();
         }
 
@@ -51,22 +51,22 @@ public class MorphologyServiceImpl implements MorphologyService {
         if (word.matches(ENGLISH_ALPHABET)) {
             return "ENGLISH";
         }
-        return "";
+        return ""; 
     }
 
 
     private boolean checkWord(String word, LuceneMorphology luceneMorphology) {
         if (!luceneMorphology.checkString(word)) {
-            return false;
+            return true;
         }
         String morphInfo = luceneMorphology.getMorphInfo(word).toString();
         for (String teg : WRONG_TAGS) {
             if (morphInfo.contains(teg)) {
-                return false;
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
 }

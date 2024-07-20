@@ -1,4 +1,4 @@
-package searchengine.mapper;
+package searchengine.mapper.search;
 
 import org.mapstruct.Mapper;
 import searchengine.dto.search.SearchDto;

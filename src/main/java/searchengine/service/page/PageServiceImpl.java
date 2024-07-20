@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import searchengine.model.page.Page;
 import searchengine.model.site.Site;
-import searchengine.repository.PageRepository;
+import searchengine.repository.page.PageRepository;
 
 @Service
 @RequiredArgsConstructor

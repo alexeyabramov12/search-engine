@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import searchengine.model.index.Index;
 import searchengine.model.lemma.Lemma;
 import searchengine.model.page.Page;
-import searchengine.repository.IndexRepository;
+import searchengine.repository.index.IndexRepository;
 
 import java.util.ArrayList;
 import java.util.List;

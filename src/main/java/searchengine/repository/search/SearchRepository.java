@@ -1,4 +1,4 @@
-package searchengine.repository;
+package searchengine.repository.search;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,4 +1,4 @@
-package searchengine.config;
+package searchengine.config.morphology;
 
 import org.apache.lucene.morphology.english.EnglishLuceneMorphology;
 import org.apache.lucene.morphology.russian.RussianLuceneMorphology;

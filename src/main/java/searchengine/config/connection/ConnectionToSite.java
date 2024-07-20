@@ -1,16 +1,17 @@
-package searchengine.config;
+package searchengine.config.connection;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Getter
 @Setter
 @Component
-@ConfigurationProperties(prefix = "indexing-settings")
-public class SitesList {
-    private List<SiteConfig> sites;
+@ConfigurationProperties(prefix = "connection")
+public class ConnectionToSite {
+
+    String user_agent;
+    String referer;
+
 }

@@ -6,8 +6,7 @@ spring:
     username: user
     password: password
     url:
-      jdbc:mysql://localhost:3306/search_engine?useSSL=false&requir
-      eSSL=false&allowPublicKeyRetrieval=true
+      jdbc:mysql://localhost:3306/search_engine?useSSL=false&requireSSL=false&allowPublicKeyRetrieval=true
   jpa:
     properties:
       hibernate:

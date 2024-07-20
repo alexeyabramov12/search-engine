@@ -9,7 +9,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import searchengine.config.ConnectionToSite;
+import searchengine.config.connection.ConnectionToSite;
 import searchengine.model.site.Site;
 import searchengine.model.site.Status;
 import searchengine.service.indexing.sitemap.SiteMapService;
